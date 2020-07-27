@@ -14,7 +14,7 @@ func TestDeckNamesAndIds(t *testing.T) {
 	// setup
 
 	// expected values
-	expected_action := `{ "action": "deckNamesAndIds", "version": 6 }`
+	expected_action := `{"action":"deckNamesAndIds","version":6}`
 
 	// set up mock client and response
 	mockCtrl := gomock.NewController(t)
