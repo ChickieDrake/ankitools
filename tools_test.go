@@ -2,21 +2,49 @@ package ankitools
 
 import "testing"
 
-func TestFindCards(t *testing.T) {
-	type args struct {
-		japanese string
-	}
+func TestDeckNamesAndIds(t *testing.T) {
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		want    string
+		wantErr bool
 	}{
-		{"default", args{japanese: "Sam"}, "this is a response"},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FindCards(tt.args.japanese); got != tt.want {
-				t.Errorf("FindCards() = %v, want %v", got, tt.want)
+			got, err := DeckNamesAndIds()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeckNamesAndIds() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeckNamesAndIds() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_createActionString(t *testing.T) {
+	type args struct {
+		action string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := createActionString(tt.args.action)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("createActionString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("createActionString() = %v, want %v", got, tt.want)
 			}
 		})
 	}
