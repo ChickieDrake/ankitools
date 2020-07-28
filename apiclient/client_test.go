@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -25,6 +26,38 @@ func Test_callUriAndReturnBody_success(t *testing.T) {
 
 	// execute
 	callUriAndReturnBody(expected_action)
+
+}
+
+func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
+
+	// setup
+	body_reader_function = mock_ReadAll
+
+	expected_action := `{"action":"deckNamesAndIds","version":6}`
+	mock_response := create_default_response()
+	var mock_err error
+	mockHTTPClient := setup_mocks(t)
+
+	// verify (wrong order because of mocking)
+	// check to make sure that the method calls the api with the correct request body
+	mockHTTPClient.EXPECT().Post(uri, mime_type, bytes.NewBufferString(expected_action)).Times(1).Return(mock_response, mock_err)
+
+	// execute
+	// execute
+	message, err := callUriAndReturnBody(expected_action)
+
+	// assert
+	if message != "" {
+		t.Errorf("apiclient: Expected message to be empty if ioutil.Readall returned an error, received: %s", message)
+	}
+	if err == nil {
+		t.Error("Expected an error if ioutil.Readall returned an error reading the body")
+	}
+	expected_error_message := "Error reading body"
+	if err.Error() != expected_error_message {
+		t.Errorf("Expected a different error message, received: %s", err.Error())
+	}
 
 }
 
@@ -97,4 +130,8 @@ func create_default_response() (response *http.Response) {
 	body := ioutil.NopCloser(bytes.NewReader([]byte(response_json)))
 	response = &http.Response{Body: body, StatusCode: 200}
 	return
+}
+
+func mock_ReadAll(r io.Reader) ([]byte, error) {
+	return nil, errors.New("Error reading body")
 }

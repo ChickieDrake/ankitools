@@ -12,6 +12,7 @@ import (
 var uri = "http://localhost:8765"
 var mime_type = "application/json"
 var Http_client HTTPClient = new(http.Client)
+var body_reader_function = ioutil.ReadAll
 
 func callUriAndReturnBody(body string) (message string, err error) {
 
@@ -28,7 +29,7 @@ func callUriAndReturnBody(body string) (message string, err error) {
 
 	if resp.Body != nil {
 		defer resp.Body.Close()
-		body, readErr := ioutil.ReadAll(resp.Body)
+		body, readErr := body_reader_function(resp.Body)
 		if readErr != nil {
 			err = readErr
 			return
