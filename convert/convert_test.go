@@ -1,13 +1,14 @@
-package convert
+package convert_test
 
 import (
-	"errors"
+	"github.com/ChickieDrake/ankitools/convert"
+	"reflect"
 	"testing"
 )
 
-func TestConvertToRequestMessage(t *testing.T) {
+func TestToRequestMessage(t *testing.T) {
 	type args struct {
-		action string
+		action convert.Action
 	}
 	tests := []struct {
 		name    string
@@ -20,39 +21,59 @@ func TestConvertToRequestMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertToRequestMessage(tt.args.action)
+			converter := convert.NewConverter()
+			got, err := converter.ToRequestMessage(tt.args.action)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ConvertToRequestMessage() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ToRequestMessage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("ConvertToRequestMessage() = %v, want %v", got, tt.want)
+				t.Errorf("ToRequestMessage() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestConvertToRequestMessage_err(t *testing.T) {
-	// for testing (easier than mocking)
-	marshal_function = marshal_function_returns_error
-
-	got, err := ConvertToRequestMessage("anystring")
-
-	// assert
-	if got != "" {
-		t.Errorf("convert: Expected converted value to be empty if json.Marshal returned an error, received: %s", got)
+func TestMessageToDeckList(t *testing.T) {
+	type args struct {
+		message string
 	}
-	if err == nil {
-		t.Error("convert: Expected an error if the json.Marshal returned an error")
+	tests := []struct {
+		name      string
+		args      args
+		wantDecks []string
+		wantErr   bool
+	}{
+		{
+			name:      "Happy Path 1",
+			args:      args{message: `{"result": ["Hello"],"error": null}`},
+			wantDecks: []string{"Hello"},
+			wantErr:   false,
+		},
+		{
+			name:      "Happy Path 2",
+			args:      args{message: `{"result": ["Hello", "Hi"],"error": null}`},
+			wantDecks: []string{"Hello", "Hi"},
+			wantErr:   false,
+		},
+		{
+			name:      "Error from JSON",
+			args:      args{message: `{"result": null,"error": "unsupported action"}`},
+			wantDecks: nil,
+			wantErr:   true,
+		},
 	}
-	expected_error_message := "Test message"
-	if err.Error() != expected_error_message {
-		t.Errorf("convert: Expected a different error message, received: %s", err.Error())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			converter := convert.NewConverter()
+			gotDecks, err := converter.ToDeckList(tt.args.message)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ToDeckList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotDecks, tt.wantDecks) {
+				t.Errorf("ToDeckList() gotDecks = %v, want %v", gotDecks, tt.wantDecks)
+			}
+		})
 	}
-
-}
-
-func marshal_function_returns_error(input interface{}) (output []byte, err error) {
-	err = errors.New("Test message")
-	return
 }

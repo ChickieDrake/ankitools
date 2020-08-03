@@ -1,12 +1,13 @@
 package ankitools
 
-var deckNamesAndIdsAction string = "deckNamesAndIds"
+import (
+	"github.com/ChickieDrake/ankitools/apiclient"
+	"github.com/ChickieDrake/ankitools/convert"
+)
 
-func DeckNamesAndIds() (string, error) {
-
-	deckNamesAndIdsBody, err := convert.ConvertToRequestMessage(deckNamesAndIdsAction)
-	if err != nil {
-		return nil, err
-	}
-	return apiclient.callUriAndReturnBody(deckNamesAndIdsBody)
+func DeckNames() (decks []string, err error) {
+	c := convert.NewConverter()
+	m, _ := c.ToRequestMessage(convert.DecksAction)
+	body, _ := apiclient.NewApiClient().DoAction(m)
+	return c.ToDeckList(body)
 }
