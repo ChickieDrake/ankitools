@@ -51,11 +51,11 @@ type errorMarshaler struct{}
 
 type errorUnmarshaler struct{}
 
-func (*errorMarshaler) Marshal(v interface{}) ([]byte, error) {
+func (*errorMarshaler) Marshal(interface{}) ([]byte, error) {
 	err := errors.New(mockErrorMessage)
 	return nil, err
 }
 
-func (*errorUnmarshaler) Unmarshal(data []byte, v interface{}) error {
+func (*errorUnmarshaler) Unmarshal([]byte, interface{}) error {
 	return errors.New(mockErrorMessage)
 }

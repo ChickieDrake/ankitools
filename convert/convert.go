@@ -36,19 +36,21 @@ ToRequestMessage takes the name of an action and returns a message for AnkiConne
 
 It does not support parametrization at this time.
 */
-func (c *Converter) ToRequestMessage(action Action) (message string, err error) {
+func (c *Converter) ToRequestMessage(action Action) (string, error) {
+	var m string
 	s := requestBody{Action: string(action), Version: 6}
 	a, err := c.marshaler.Marshal(s)
 	if err != nil {
-		return
+		return m, err
 	}
-	return string(a), err
+	m = string(a)
+	return m, err
 }
 
 // ToDeckList interprets a response from the "deckNames" AnkiConnect action
-func (c *Converter) ToDeckList(message string) (decks []string, err error) {
+func (c *Converter) ToDeckList(message string) ([]string, error) {
 	r := &deckNamesResponse{}
-	err = c.unmarshaler.Unmarshal([]byte(message), r)
+	err := c.unmarshaler.Unmarshal([]byte(message), r)
 	if r.Error != nil {
 		return nil, errors.New(*r.Error)
 	}

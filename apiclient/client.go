@@ -35,17 +35,18 @@ func New() *ApiClient {
 }
 
 // DoAction takes a well-formatted JSON message and sends it to AnkiConnect.
-func (a *ApiClient) DoAction(body string) (message string, err error) {
+func (a *ApiClient) DoAction(body string) (string, error) {
+	var message string
 
 	resp, err := a.httpClient.Post(a.uri, a.mimeType, bytes.NewBufferString(body))
 	if err != nil {
-		return
+		return message, err
 	}
 
 	if resp.StatusCode != 200 {
 		errMessage := fmt.Sprintf(wrongStatusErrorFormat, resp.StatusCode)
 		err = errors.New(errMessage)
-		return
+		return message, err
 	}
 
 	if resp.Body != nil {
@@ -53,17 +54,18 @@ func (a *ApiClient) DoAction(body string) (message string, err error) {
 		body, readErr := a.bodyReader.ReadAll(resp.Body)
 		if readErr != nil {
 			err = readErr
-			return
+			return message, err
 		}
 
 		message = string(body)
 	}
 
-	return
+	return message, err
 }
 
+//go:generate mockery -name httpClient -filename mock_http_test.go -structname MockHTTPClient -output . -inpkg
 type httpClient interface {
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+	Post(url, contentType string, body io.Reader) (*http.Response, error)
 }
 
 type bodyReader interface {

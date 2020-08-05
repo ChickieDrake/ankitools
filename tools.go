@@ -31,13 +31,13 @@ func (t *Tools) DeckNames() ([]string, error) {
 	return t.cv.ToDeckList(body)
 }
 
-//go:generate mockery -name converter
+//go:generate mockery -name converter -filename mock_converter_test.go -structname MockConverter -output . -inpkg
 type converter interface {
 	ToRequestMessage(action convert.Action) (message string, err error)
 	ToDeckList(message string) (decks []string, err error)
 }
 
-//go:generate mockery -name apiClient
+//go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg
 type apiClient interface {
 	DoAction(body string) (message string, err error)
 }
