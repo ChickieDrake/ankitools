@@ -11,7 +11,7 @@ const mockErrorMessage string = "mock: error message"
 
 func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
 	// setup
-	converter := NewConverter()
+	converter := New()
 	converter.marshaler = new(errorMarshaler)
 
 	// execution
@@ -30,7 +30,7 @@ func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
 
 func TestMessageToDeckList_Error_From_Unmarshal(t *testing.T) {
 	// setup
-	converter := NewConverter()
+	converter := New()
 	converter.unmarshaler = new(errorUnmarshaler)
 
 	// execution

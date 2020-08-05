@@ -24,8 +24,8 @@ type ApiClient struct {
 	bodyReader bodyReader
 }
 
-// NewApiClient creates a pointer to a new instance of ApiClient.
-func NewApiClient() *ApiClient {
+// New creates a pointer to a new instance of ApiClient.
+func New() *ApiClient {
 	return &ApiClient{
 		uri:        "http://localhost:8765",
 		mimeType:   "application/json",

@@ -21,7 +21,7 @@ func TestToRequestMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			converter := convert.NewConverter()
+			converter := convert.New()
 			got, err := converter.ToRequestMessage(tt.args.action)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ToRequestMessage() error = %v, wantErr %v", err, tt.wantErr)
@@ -65,7 +65,7 @@ func TestMessageToDeckList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			converter := convert.NewConverter()
+			converter := convert.New()
 			gotDecks, err := converter.ToDeckList(tt.args.message)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ToDeckList() error = %v, wantErr %v", err, tt.wantErr)

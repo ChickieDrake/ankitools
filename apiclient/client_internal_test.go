@@ -20,7 +20,7 @@ const mockErrorMessage = "mock: simple error for testing"
 func Test_callUriAndReturnBody_success(t *testing.T) {
 
 	// setup
-	a := NewApiClient()
+	a := New()
 	mockResponse := createDefaultResponse()
 	var mockErr error
 	mockHTTPClient := setupMocks(t, a)
@@ -37,7 +37,7 @@ func Test_callUriAndReturnBody_success(t *testing.T) {
 func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
 
 	// setup
-	a := NewApiClient()
+	a := New()
 	a.bodyReader = new(errorBodyReader)
 
 	mockResponse := createDefaultResponse()
@@ -61,7 +61,7 @@ func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
 func Test_callUriAndReturnBody_err(t *testing.T) {
 
 	// setup
-	a := NewApiClient()
+	a := New()
 	mockResponse := createDefaultResponse()
 	var mockErr = errors.New(mockErrorMessage)
 	mockHTTPClient := setupMocks(t, a)
@@ -81,7 +81,7 @@ func Test_callUriAndReturnBody_err(t *testing.T) {
 
 func Test_callUriAndReturnBody_not_200(t *testing.T) {
 	// setup
-	a := NewApiClient()
+	a := New()
 	mockResponse := createDefaultResponse()
 	mockResponse.StatusCode = 500
 	var mockErr error

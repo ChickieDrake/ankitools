@@ -23,8 +23,8 @@ type Converter struct {
 	unmarshaler unmarshaler
 }
 
-// NewConverter creates a new converter instance.
-func NewConverter() *Converter {
+// New creates a new converter instance.
+func New() *Converter {
 	return &Converter{
 		marshaler:   new(defaultMarshaler),
 		unmarshaler: new(defaultUnmarshaler),
