@@ -15,7 +15,7 @@ func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
 	converter.marshaler = new(errorMarshaler)
 
 	// execution
-	got, err := converter.ToRequestMessage("anystring")
+	got, err := converter.ToRequestMessage("any string")
 
 	// validation
 	assert.Emptyf(
@@ -34,7 +34,7 @@ func TestMessageToDeckList_Error_From_Unmarshal(t *testing.T) {
 	converter.unmarshaler = new(errorUnmarshaler)
 
 	// execution
-	got, err := converter.ToDeckList("anystring")
+	got, err := converter.ToDeckList("any string")
 
 	// validation
 	assert.Emptyf(

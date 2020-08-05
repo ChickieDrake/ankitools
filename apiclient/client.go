@@ -34,7 +34,7 @@ func New() *ApiClient {
 	}
 }
 
-// DoAction takes a well-formated JSON message and sends it to AnkiConnect.
+// DoAction takes a well-formatted JSON message and sends it to AnkiConnect.
 func (a *ApiClient) DoAction(body string) (message string, err error) {
 
 	resp, err := a.httpClient.Post(a.uri, a.mimeType, bytes.NewBufferString(body))
