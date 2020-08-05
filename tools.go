@@ -6,15 +6,38 @@ import (
 )
 
 type Tools struct {
-	apiClient := apiclient.New()
-
+	ac apiClient
+	cv converter
 }
 
-func DeckNames() (decks []string, err error) {
-	c := convert.New()
-	m, _ := c.ToRequestMessage(convert.DecksAction)
-	body, _ := apiclient.New().DoAction(m)
-	return c.ToDeckList(body)
+func New() *Tools {
+	return &Tools{
+		ac: apiclient.New(),
+		cv: convert.New(),
+	}
 }
 
+func (t *Tools) DeckNames() ([]string, error) {
+	m, err := t.cv.ToRequestMessage(convert.DecksAction)
+	if err != nil {
+		return nil, err
+	}
 
+	body, err := t.ac.DoAction(m)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.cv.ToDeckList(body)
+}
+
+//go:generate mockery -name converter
+type converter interface {
+	ToRequestMessage(action convert.Action) (message string, err error)
+	ToDeckList(message string) (decks []string, err error)
+}
+
+//go:generate mockery -name apiClient
+type apiClient interface {
+	DoAction(body string) (message string, err error)
+}
