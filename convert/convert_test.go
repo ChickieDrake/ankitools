@@ -9,6 +9,7 @@ import (
 func TestToRequestMessage(t *testing.T) {
 	type args struct {
 		action convert.Action
+		params *convert.Params
 	}
 	tests := []struct {
 		name    string
@@ -22,7 +23,7 @@ func TestToRequestMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			converter := convert.New()
-			got, err := converter.ToRequestMessage(tt.args.action)
+			got, err := converter.ToRequestMessage(tt.args.action, tt.args.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ToRequestMessage() error = %v, wantErr %v", err, tt.wantErr)
 				return

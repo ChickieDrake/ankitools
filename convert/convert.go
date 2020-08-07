@@ -8,12 +8,14 @@ package convert
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ChickieDrake/ankitools/types"
 )
 
 type Action string
 
 const (
-	DecksAction Action = "deckNames"
+	DecksAction      Action = "deckNames"
+	QueryNotesAction Action = "findNotes"
 )
 
 // Converter provides methods that can be used to create and interpret messages for AnkiConnect
@@ -31,12 +33,18 @@ func New() *Converter {
 	}
 }
 
+type Params struct {
+	Query string
+}
+
 /*
 ToRequestMessage takes the name of an action and returns a message for AnkiConnect.
 
-It does not support parametrization at this time.
+It supports the following params. If you pass in the wrong params for your action, it
+does not check (YMMV with respect to the API response).
+	* query
 */
-func (c *Converter) ToRequestMessage(action Action) (string, error) {
+func (c *Converter) ToRequestMessage(action Action, params *Params) (string, error) {
 	var m string
 	s := requestBody{Action: string(action), Version: 6}
 	a, err := c.marshaler.Marshal(s)
@@ -55,6 +63,11 @@ func (c *Converter) ToDeckList(message string) ([]string, error) {
 		return nil, errors.New(*r.Error)
 	}
 	return r.Result, err
+}
+
+// ToNoteList interprets a response from the "findNotes" AnkiConnect action
+func (c *Converter) ToNoteList(message string) (notes []*types.Note, err error) {
+	return
 }
 
 type requestBody struct {

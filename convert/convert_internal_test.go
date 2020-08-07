@@ -15,7 +15,7 @@ func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
 	converter.marshaler = new(errorMarshaler)
 
 	// execution
-	got, err := converter.ToRequestMessage("any string")
+	got, err := converter.ToRequestMessage("any string", nil)
 
 	// validation
 	assert.Emptyf(
