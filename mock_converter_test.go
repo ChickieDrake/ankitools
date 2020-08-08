@@ -14,8 +14,8 @@ type MockConverter struct {
 	mock.Mock
 }
 
-// ToDeckList provides a mock function with given fields: message
-func (_m *MockConverter) ToDeckList(message string) ([]string, error) {
+// ToDeckNameList provides a mock function with given fields: message
+func (_m *MockConverter) ToDeckNameList(message string) ([]string, error) {
 	ret := _m.Called(message)
 
 	var r0 []string
@@ -24,6 +24,29 @@ func (_m *MockConverter) ToDeckList(message string) ([]string, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(message)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ToNoteIDList provides a mock function with given fields: message
+func (_m *MockConverter) ToNoteIDList(message string) ([]int, error) {
+	ret := _m.Called(message)
+
+	var r0 []int
+	if rf, ok := ret.Get(0).(func(string) []int); ok {
+		r0 = rf(message)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int)
 		}
 	}
 

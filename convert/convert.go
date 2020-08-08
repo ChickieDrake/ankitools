@@ -6,7 +6,6 @@ It assumes AnkiConnect version 6. It does not support all types at this time.
 package convert
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/ChickieDrake/ankitools/types"
 )
@@ -16,6 +15,7 @@ type Action string
 const (
 	DecksAction      Action = "deckNames"
 	QueryNotesAction Action = "findNotes"
+	NotesInfoAction  Action = "notesInfo"
 )
 
 // Converter provides methods that can be used to create and interpret messages for AnkiConnect
@@ -33,20 +33,16 @@ func New() *Converter {
 	}
 }
 
-type Params struct {
-	Query string
-}
-
 /*
 ToRequestMessage takes the name of an action and returns a message for AnkiConnect.
 
 It supports the following params. If you pass in the wrong params for your action, it
-does not check (YMMV with respect to the API response).
+does not check (YMMV with respect to the API result).
 	* query
 */
 func (c *Converter) ToRequestMessage(action Action, params *Params) (string, error) {
 	var m string
-	s := requestBody{Action: string(action), Version: 6}
+	s := requestBody{Action: string(action), Version: 6, Params: params}
 	a, err := c.marshaler.Marshal(s)
 	if err != nil {
 		return m, err
@@ -55,47 +51,33 @@ func (c *Converter) ToRequestMessage(action Action, params *Params) (string, err
 	return m, err
 }
 
-// ToDeckList interprets a response from the "deckNames" AnkiConnect action
-func (c *Converter) ToDeckList(message string) ([]string, error) {
+// ToDeckNameList interprets a result from the "deckNames" AnkiConnect action
+func (c *Converter) ToDeckNameList(message string) ([]string, error) {
 	r := &deckNamesResponse{}
-	err := c.unmarshaler.Unmarshal([]byte(message), r)
-	if r.Error != nil {
-		return nil, errors.New(*r.Error)
-	}
+	err := c.unmarshal(message, r)
 	return r.Result, err
 }
 
-// ToNoteList interprets a response from the "findNotes" AnkiConnect action
-func (c *Converter) ToNoteList(message string) (notes []*types.Note, err error) {
-	return
+// ToNoteList interprets a result from the "findNotes" AnkiConnect action
+func (c *Converter) ToNoteIDList(message string) ([]int, error) {
+	r := &noteIDsResponse{}
+	err := c.unmarshal(message, r)
+	return r.Result, err
 }
 
-type requestBody struct {
-	Action  string `json:"action"`
-	Version int    `json:"version"`
+func (c *Converter) ToNoteList(message string) ([]*types.Note, error) {
+	r := &notesResponse{}
+	err := c.unmarshal(message, r)
+	return r.Result, err
 }
 
-type deckNamesResponse struct {
-	Result []string
-	Error  *string
-}
-
-type marshaler interface {
-	Marshal(v interface{}) ([]byte, error)
-}
-
-type unmarshaler interface {
-	Unmarshal(data []byte, v interface{}) error
-}
-
-type defaultMarshaler struct{}
-
-type defaultUnmarshaler struct{}
-
-func (*defaultMarshaler) Marshal(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-func (*defaultUnmarshaler) Unmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+func (c *Converter) unmarshal(message string, v apiErrorHolder) error {
+	err := c.unmarshaler.Unmarshal([]byte(message), v)
+	if err != nil {
+		return err
+	}
+	if v.apiError() != "" {
+		return errors.New(v.apiError())
+	}
+	return err
 }

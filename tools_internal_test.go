@@ -2,11 +2,11 @@ package ankitools
 
 import (
 	"errors"
+	"fmt"
 	"github.com/ChickieDrake/ankitools/apiclient"
 	"github.com/ChickieDrake/ankitools/convert"
 	"github.com/ChickieDrake/ankitools/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
@@ -31,33 +31,65 @@ func TestNew(t *testing.T) {
 	}
 }
 
-const request = `{"action":"fake","version":6}`
-const response = `{ "result": {"Default": 1}, "error": null }`
+const requestTemplate = `{"action":"%s","version":6}`
+const requestTemplateWithParams = `{"action":"%s","version":6,"params":%s}`
 
+// Valid HTTP requests (for mocking)
+var deckNamesRequest = fmt.Sprintf(requestTemplate, convert.DecksAction)
+var queryNotesRequest = fmt.Sprintf(requestTemplateWithParams, convert.QueryNotesAction, `{"query":"deck:current"}`)
+var notesInfoRequest = fmt.Sprintf(requestTemplateWithParams, convert.NotesInfoAction, `{"notes":[1483959289817,1483959291695]}`)
+
+// Valid HTTP responses (for mocking)
+const deckNamesResponse = `{"result": ["Deck1","Deck2"],"error": null}`
+const queryNotesResponse = `{"result": [1483959289817, 1483959291695],"error": null}`
+const notesInfoResponse = `{
+		"result": [
+			{
+				"noteId":1483959289817
+			},
+			{
+				"noteId":1483959291695
+			}
+		],
+		"error": null
+	}`
+
+// Valid mock object method names
 const toRequestMessage = "ToRequestMessage"
 const doAction = "DoAction"
-const toDeckList = "ToDeckList"
+const toDeckList = "ToDeckNameList"
+const toNoteIDList = "ToNoteIDList"
 const toNoteList = "ToNoteList"
+
+// Notes query string (and struct)
+const notesQuery = "deck:current"
+
+var notesQueryParams = &convert.Params{Query: notesQuery}
+var notesInfoParams = &convert.Params{Notes: expectedNoteIDs}
+
+var expectedNoteIDs = []int{1483959289817, 1483959291695}
+var expectedNotes = []*types.Note{
+	{NoteID: 1483959289817},
+	{NoteID: 1483959291695},
+}
 
 func TestTools_DeckNames_SUCCESS(t *testing.T) {
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
 
-	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return(response, nil).Once()
-	expectedNames := []string{"Deck1", "Deck2"}
-	cv.On(toDeckList, response).Return(expectedNames, nil).Once()
+	//cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
+	ac.On(doAction, deckNamesRequest).Return(deckNamesResponse, nil).Once()
 
 	// execute
 	names, err := tools.DeckNames()
 
 	// verify
+	expectedNames := []string{"Deck1", "Deck2"}
 	assert.Nil(t, err)
 	require.NotNil(t, names)
 	assert.Equal(t, expectedNames, names)
-
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
 }
 
 func toolsWithMocks() (*Tools, *MockApiClient, *MockConverter) {
@@ -71,7 +103,7 @@ func toolsWithMocks() (*Tools, *MockApiClient, *MockConverter) {
 
 func TestTools_DeckNames_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools, _, cv := toolsWithMocks()
 
 	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return("", expectedErr).Once()
 	// execute
@@ -81,11 +113,6 @@ func TestTools_DeckNames_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 	assert.Nil(t, names)
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
-
-	cv.AssertExpectations(t)
-
-	ac.AssertNotCalled(t, doAction, mock.Anything)
-	cv.AssertNotCalled(t, toDeckList, mock.Anything)
 }
 
 func TestTools_DeckNames_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
@@ -93,8 +120,8 @@ func TestTools_DeckNames_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
 	// setup
 	tools, ac, cv := toolsWithMocks()
 
-	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return("", expectedErr).Once()
+	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
+	ac.On(doAction, deckNamesRequest).Return("", expectedErr).Once()
 
 	// execute
 	names, err := tools.DeckNames()
@@ -103,19 +130,15 @@ func TestTools_DeckNames_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
 	assert.Nil(t, names)
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
-
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
-	cv.AssertNotCalled(t, toDeckList, mock.Anything)
 }
 
-func TestTools_DeckNames_ERR_FROM_TODECKLIST_FAIL(t *testing.T) {
+func TestTools_DeckNames_ERR_FROM_TODECKNAMELIST_FAIL(t *testing.T) {
 	// setup
 	tools, ac, cv := toolsWithMocks()
 
-	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return(response, nil).Once()
-	cv.On(toDeckList, response).Return(nil, expectedErr).Once()
+	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
+	ac.On(doAction, deckNamesRequest).Return(deckNamesResponse, nil).Once()
+	cv.On(toDeckList, deckNamesResponse).Return(nil, expectedErr).Once()
 
 	// execute
 	names, err := tools.DeckNames()
@@ -124,23 +147,16 @@ func TestTools_DeckNames_ERR_FROM_TODECKLIST_FAIL(t *testing.T) {
 	assert.Nil(t, names)
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
-
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
 }
-
-const notesQuery = "some notes"
-
-var notesQueryParams = &convert.Params{Query: notesQuery}
 
 func TestTools_QueryNotes_SUCCESS(t *testing.T) {
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
 
-	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return(response, nil).Once()
-	expectedNotes := []*types.Note{{NoteID: 1502298033753}, {NoteID: 1502298033755}}
-	cv.On(toNoteList, response).Return(expectedNotes, nil).Once()
+	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).
+		On(doAction, notesInfoRequest).Return(notesInfoResponse, nil)
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -150,13 +166,11 @@ func TestTools_QueryNotes_SUCCESS(t *testing.T) {
 	require.NotNil(t, notes)
 	assert.Equal(t, expectedNotes, notes)
 
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
 }
 
 func TestTools_QueryNotes_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools, _, cv := toolsWithMocks()
 
 	cv.On(
 		toRequestMessage,
@@ -172,19 +186,16 @@ func TestTools_QueryNotes_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
 
-	cv.AssertExpectations(t)
-
-	ac.AssertNotCalled(t, doAction, mock.Anything)
-	cv.AssertNotCalled(t, toNoteList, mock.Anything)
 }
 
-func TestTools_QueryNotes_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
+func TestTools_QueryNotes_ERR_FROM_DOACTION_FAIL(t *testing.T) {
 
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
 
-	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return("", expectedErr).Once()
+	ac.On(doAction, queryNotesRequest).Return("", expectedErr).Once()
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -193,19 +204,80 @@ func TestTools_QueryNotes_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
 	assert.Nil(t, notes)
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
+}
 
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
-	cv.AssertNotCalled(t, toNoteList, mock.Anything)
+func TestTools_QueryNotes_ERR_FROM_TONOTEIDLIST_FAIL(t *testing.T) {
+	// setup
+	tools, ac, cv := toolsWithMocks()
+
+	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
+	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	cv.On(toNoteIDList, queryNotesResponse).Return(nil, expectedErr).Once()
+
+	// execute
+	notes, err := tools.QueryNotes(notesQuery)
+
+	// verify
+	assert.Nil(t, notes)
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_QueryNotes_ERR_FROM_SECOND_TOREQUESTMESSAGE_FAIL(t *testing.T) {
+	tools, ac, cv := toolsWithMocks()
+
+	// All this is passing behaviour
+	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
+	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
+
+	// This is throwing the error we expect to see
+	cv.On(toRequestMessage, convert.NotesInfoAction, notesInfoParams).Return("", expectedErr).Once()
+
+	// execute
+	notes, err := tools.QueryNotes(notesQuery)
+
+	// verify
+	assert.Nil(t, notes)
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_QueryNotes_ERR_FROM_SECOND_DOACTION_FAIL(t *testing.T) {
+	tools, ac, cv := toolsWithMocks()
+
+	// All this is passing behaviour
+	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
+	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
+	cv.On(toRequestMessage, convert.NotesInfoAction, notesInfoParams).Return(notesInfoRequest, nil).Once()
+
+	// This is throwing the error we expect to see
+	ac.On(doAction, notesInfoRequest).Return("", expectedErr).Once()
+
+	// execute
+	notes, err := tools.QueryNotes(notesQuery)
+
+	// verify
+	assert.Nil(t, notes)
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
 }
 
 func TestTools_QueryNotes_ERR_FROM_TONOTELIST_FAIL(t *testing.T) {
 	// setup
 	tools, ac, cv := toolsWithMocks()
 
-	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(request, nil).Once()
-	ac.On(doAction, request).Return(response, nil).Once()
-	cv.On(toNoteList, response).Return(nil, expectedErr).Once()
+	// All this is passing behaviour
+	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
+	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
+
+	cv.On(toRequestMessage, convert.NotesInfoAction, notesInfoParams).Return(notesInfoRequest, nil).Once()
+	ac.On(doAction, notesInfoRequest).Return(notesInfoResponse, nil).Once()
+
+	// This is throwing the error we expect to see
+	cv.On(toNoteList, notesInfoResponse).Return(nil, expectedErr).Once()
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -214,7 +286,4 @@ func TestTools_QueryNotes_ERR_FROM_TONOTELIST_FAIL(t *testing.T) {
 	assert.Nil(t, notes)
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
-
-	cv.AssertExpectations(t)
-	ac.AssertExpectations(t)
 }

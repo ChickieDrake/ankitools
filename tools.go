@@ -1,3 +1,4 @@
+// ankitools provides API methods that call AnkiConnect (if it is running locally).
 package ankitools
 
 import (
@@ -18,6 +19,7 @@ func New() *Tools {
 	}
 }
 
+// DeckNames gets a list of decks in the current collection.
 func (t *Tools) DeckNames() ([]string, error) {
 	m, err := t.cv.ToRequestMessage(convert.DecksAction, nil)
 	if err != nil {
@@ -29,10 +31,24 @@ func (t *Tools) DeckNames() ([]string, error) {
 		return nil, err
 	}
 
-	return t.cv.ToDeckList(body)
+	return t.cv.ToDeckNameList(body)
 }
 
+// QueryNotes finds the info for the notes that match the query string passed in.
 func (t *Tools) QueryNotes(query string) ([]*types.Note, error) {
+
+	noteIDs, err := t.findNoteIDsByQuery(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var notes []*types.Note
+	notes, err = t.findNotesByID(noteIDs)
+
+	return notes, err
+}
+
+func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 	params := &convert.Params{Query: query}
 
 	m, err := t.cv.ToRequestMessage(convert.QueryNotesAction, params)
@@ -44,15 +60,28 @@ func (t *Tools) QueryNotes(query string) ([]*types.Note, error) {
 	if err != nil {
 		return nil, err
 	}
+	return t.cv.ToNoteIDList(body)
+}
 
+func (t *Tools) findNotesByID(ids []int) ([]*types.Note, error) {
+	params := &convert.Params{Notes: ids}
+	m, err := t.cv.ToRequestMessage(convert.NotesInfoAction, params)
+	if err != nil {
+		return nil, err
+	}
+	body, err := t.ac.DoAction(m)
+	if err != nil {
+		return nil, err
+	}
 	return t.cv.ToNoteList(body)
 }
 
 //go:generate mockery -name converter -filename mock_converter_test.go -structname MockConverter -output . -inpkg
 type converter interface {
 	ToRequestMessage(action convert.Action, params *convert.Params) (message string, err error)
-	ToDeckList(message string) (decks []string, err error)
-	ToNoteList(message string) (notes []*types.Note, err error)
+	ToDeckNameList(message string) (decks []string, err error)
+	ToNoteIDList(message string) (notes []int, err error)
+	ToNoteList(message string) ([]*types.Note, error)
 }
 
 //go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg

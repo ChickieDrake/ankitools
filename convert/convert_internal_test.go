@@ -9,7 +9,7 @@ import (
 
 const mockErrorMessage string = "mock: error message"
 
-func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
+func TestConverter_ToRequestMessage_ERROR_FROM_MARSHAL_FAIL(t *testing.T) {
 	// setup
 	converter := New()
 	converter.marshaler = new(errorMarshaler)
@@ -28,13 +28,51 @@ func TestToRequestMessage_Error_From_Marshal(t *testing.T) {
 	assert.Equalf(t, mockErrorMessage, err.Error(), "Expected a different error message, received: %s", err.Error())
 }
 
-func TestMessageToDeckList_Error_From_Unmarshal(t *testing.T) {
+func TestConverter_ToDeckList_ERROR_FROM_UNMARSHAL_FAIL(t *testing.T) {
 	// setup
 	converter := New()
 	converter.unmarshaler = new(errorUnmarshaler)
 
 	// execution
-	got, err := converter.ToDeckList("any string")
+	got, err := converter.ToDeckNameList("any string")
+
+	// validation
+	assert.Emptyf(
+		t,
+		got,
+		"Expected converted value to be empty if json.Unmarshal returned an error, received: %s",
+		got,
+	)
+	require.NotNil(t, err, "Expected an error if the json.Unmarshal returned an error")
+	assert.Equalf(t, mockErrorMessage, err.Error(), "Expected a different error message, received: %s", err.Error())
+}
+
+func TestConverter_ToNoteIDList_ERROR_FROM_UNMARSHAL_FAIL(t *testing.T) {
+	// setup
+	converter := New()
+	converter.unmarshaler = new(errorUnmarshaler)
+
+	// execution
+	got, err := converter.ToNoteIDList("any string")
+
+	// validation
+	assert.Emptyf(
+		t,
+		got,
+		"Expected converted value to be empty if json.Unmarshal returned an error, received: %s",
+		got,
+	)
+	require.NotNil(t, err, "Expected an error if the json.Unmarshal returned an error")
+	assert.Equalf(t, mockErrorMessage, err.Error(), "Expected a different error message, received: %s", err.Error())
+}
+
+func TestConverter_ToNoteList_ERROR_FROM_UNMARSHAL_FAIL(t *testing.T) {
+	// setup
+	converter := New()
+	converter.unmarshaler = new(errorUnmarshaler)
+
+	// execution
+	got, err := converter.ToNoteList("any string")
 
 	// validation
 	assert.Emptyf(
