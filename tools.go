@@ -7,11 +7,13 @@ import (
 	"github.com/ChickieDrake/ankitools/types"
 )
 
+// Tools provides the methods to interact with AnkiConnect.
 type Tools struct {
 	ac apiClient
 	cv converter
 }
 
+// New creates a new instance of Tools.
 func New() *Tools {
 	return &Tools{
 		ac: apiclient.New(),

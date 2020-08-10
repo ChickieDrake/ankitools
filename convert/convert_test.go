@@ -132,6 +132,11 @@ func TestConverter_ToNoteIDList(t *testing.T) {
 }
 
 func TestConverter_ToNoteList(t *testing.T) {
+	expectedFieldsMap := &map[string]types.Field{
+		"Front": {Value: "front content", Order: 0},
+		"Back":  {Value: "back content", Order: 1},
+	}
+
 	type args struct {
 		message string
 	}
@@ -152,12 +157,22 @@ func TestConverter_ToNoteList(t *testing.T) {
 							"fields": {
 								"Front": {"value": "front content", "order": 0},
 								"Back": {"value": "back content", "order": 1}
-							}
+							},
+							"cards": [ 1234566, 3456778 ]
         				}
 					],
 					"error": null
 				}`},
-			want:    []*types.Note{{NoteID: 1502298033753}},
+			want: []*types.Note{{
+				NoteID:    1502298033753,
+				ModelName: "Basic",
+				Tags: &[]string{
+					"tag",
+					"another_tag",
+				},
+				Fields:  expectedFieldsMap,
+				CardIDs: &[]int{1234566, 3456778},
+			}},
 			wantErr: false,
 		},
 	}
@@ -169,6 +184,8 @@ func TestConverter_ToNoteList(t *testing.T) {
 				t.Errorf("ToNoteList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			//assert.True(reflect.DeepEqual(got.Fields, tt.want.Fields))
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToNoteList() got = %v, want %v", got, tt.want)
 			}
