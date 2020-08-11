@@ -18,27 +18,36 @@ const wrongStatusErrorFormat = "apiclient: Received non-200 status code from api
 
 // ApiClient provides a wrapper for making http calls to AnkiConnect.
 type ApiClient struct {
-	uri        string
-	mimeType   string
+	URI        string
 	httpClient httpClient
 	bodyReader bodyReader
 }
 
 // New creates a pointer to a new instance of ApiClient.
-func New() *ApiClient {
+func New(uri string) *ApiClient {
 	return &ApiClient{
-		uri:        "http://localhost:8765",
-		mimeType:   "application/json",
+		URI:        uri,
 		httpClient: new(http.Client),
 		bodyReader: new(defaultBodyReader),
 	}
 }
 
-// DoAction takes a well-formatted JSON message and sends it to AnkiConnect.
-func (a *ApiClient) DoAction(body string) (string, error) {
-	var message string
+// DoPost takes a well-formatted JSON message and sends it to AnkiConnect.
+func (a *ApiClient) DoPost(body string) (string, error) {
+	return a.DoHTTP(http.MethodPost, body)
+}
 
-	resp, err := a.httpClient.Post(a.uri, a.mimeType, bytes.NewBufferString(body))
+func (a *ApiClient) DoHTTP(method string, body string) (string, error) {
+	var message string
+	var resp *http.Response
+	var err error
+
+	if method == http.MethodPost {
+		mimeType := "application/json"
+		resp, err = a.httpClient.Post(a.URI, mimeType, bytes.NewBufferString(body))
+	} else if method == http.MethodGet {
+		resp, err = a.httpClient.Get(a.URI)
+	}
 	if err != nil {
 		return message, err
 	}
@@ -65,7 +74,8 @@ func (a *ApiClient) DoAction(body string) (string, error) {
 
 //go:generate mockery -name httpClient -filename mock_http_test.go -structname MockHTTPClient -output . -inpkg
 type httpClient interface {
-	Post(url, contentType string, body io.Reader) (*http.Response, error)
+	Post(uri, contentType string, body io.Reader) (*http.Response, error)
+	Get(uri string) (*http.Response, error)
 }
 
 type bodyReader interface {

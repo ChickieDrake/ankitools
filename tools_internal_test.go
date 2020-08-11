@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 		name string
 		want *Tools
 	}{
-		{"Happy path", &Tools{apiclient.New(), convert.New()}},
+		{"Happy path", &Tools{apiclient.New(ankiURI), convert.New()}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -56,7 +56,7 @@ const notesInfoResponse = `{
 
 // Valid mock object method names
 const toRequestMessage = "ToRequestMessage"
-const doAction = "DoAction"
+const doAction = "DoPost"
 const toDeckList = "ToDeckNameList"
 const toNoteIDList = "ToNoteIDList"
 const toNoteList = "ToNoteList"

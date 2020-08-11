@@ -15,6 +15,8 @@ import (
 const expectedAction = `{"action":"deckNamesAndIds","version":6}`
 const bodyReadingErrorMessage = "error reading body"
 const mockErrorMessage = "mock: simple error for testing"
+const testURI = "http://eclipsebudo.com"
+const testMimeType = "application/json"
 
 func Test_callUriAndReturnBody_success(t *testing.T) {
 
@@ -27,13 +29,13 @@ func Test_callUriAndReturnBody_success(t *testing.T) {
 	// check to make sure that the method calls the api with the correct request body
 	mockHTTPClient.On(
 		"Post",
-		a.uri,
-		a.mimeType,
+		testURI,
+		testMimeType,
 		bytes.NewBufferString(expectedAction),
 	).Return(mockResponse, nil).Once()
 
 	// execution
-	_, _ = a.DoAction(expectedAction)
+	_, _ = a.DoPost(expectedAction)
 
 	mockHTTPClient.AssertExpectations(t)
 
@@ -51,14 +53,14 @@ func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
 	// check to make sure that the method calls the api with the correct request body
 	mockHTTPClient.On(
 		"Post",
-		a.uri,
-		a.mimeType,
+		testURI,
+		testMimeType,
 		bytes.NewBufferString(expectedAction),
 	).Return(mockResponse, nil).Once()
 
 	// execute
 	// execute
-	message, err := a.DoAction(expectedAction)
+	message, err := a.DoPost(expectedAction)
 
 	// assert
 	assert.Emptyf(t, message, "Expected message to be empty if ioutil.Readall returned an error, received: %s", message)
@@ -79,13 +81,13 @@ func Test_callUriAndReturnBody_err(t *testing.T) {
 	// check to make sure that the method calls the api with the correct request body
 	mockHTTPClient.On(
 		"Post",
-		a.uri,
-		a.mimeType,
+		testURI,
+		testMimeType,
 		bytes.NewBufferString(expectedAction),
 	).Return(mockResponse, mockErr).Once()
 
 	// execute
-	message, err := a.DoAction(expectedAction)
+	message, err := a.DoPost(expectedAction)
 
 	// assert
 	assert.Empty(t, message, "Expected message to be null if http client returned an error")
@@ -105,13 +107,13 @@ func Test_callUriAndReturnBody_not_200(t *testing.T) {
 	// check to make sure that the method calls the api with the correct request body
 	mockHTTPClient.On(
 		"Post",
-		a.uri,
-		a.mimeType,
+		testURI,
+		testMimeType,
 		bytes.NewBufferString(expectedAction),
 	).Return(mockResponse, nil).Once()
 
 	// execute
-	message, err := a.DoAction(expectedAction)
+	message, err := a.DoPost(expectedAction)
 
 	// assert
 	assert.Empty(t, message, "Expected message to be empty if http client returned an error")
@@ -137,7 +139,7 @@ func (*errorBodyReader) ReadAll(io.Reader) ([]byte, error) {
 }
 
 func createClientWithMockedHttp() (*ApiClient, *MockHTTPClient) {
-	a := New()
+	a := New(testURI)
 	mockHTTPClient := &MockHTTPClient{}
 	a.httpClient = mockHTTPClient
 	return a, mockHTTPClient

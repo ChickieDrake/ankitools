@@ -10,7 +10,7 @@ type MockApiClient struct {
 }
 
 // DoAction provides a mock function with given fields: body
-func (_m *MockApiClient) DoAction(body string) (string, error) {
+func (_m *MockApiClient) DoPost(body string) (string, error) {
 	ret := _m.Called(body)
 
 	var r0 string

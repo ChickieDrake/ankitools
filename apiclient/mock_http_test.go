@@ -14,13 +14,36 @@ type MockHTTPClient struct {
 	mock.Mock
 }
 
-// Post provides a mock function with given fields: url, contentType, body
-func (_m *MockHTTPClient) Post(url string, contentType string, body io.Reader) (*http.Response, error) {
-	ret := _m.Called(url, contentType, body)
+// Get provides a mock function with given fields: uri
+func (_m *MockHTTPClient) Get(uri string) (*http.Response, error) {
+	ret := _m.Called(uri)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(string) *http.Response); ok {
+		r0 = rf(uri)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(uri)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Post provides a mock function with given fields: uri, contentType, body
+func (_m *MockHTTPClient) Post(uri string, contentType string, body io.Reader) (*http.Response, error) {
+	ret := _m.Called(uri, contentType, body)
 
 	var r0 *http.Response
 	if rf, ok := ret.Get(0).(func(string, string, io.Reader) *http.Response); ok {
-		r0 = rf(url, contentType, body)
+		r0 = rf(uri, contentType, body)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*http.Response)
@@ -29,7 +52,7 @@ func (_m *MockHTTPClient) Post(url string, contentType string, body io.Reader) (
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, io.Reader) error); ok {
-		r1 = rf(url, contentType, body)
+		r1 = rf(uri, contentType, body)
 	} else {
 		r1 = ret.Error(1)
 	}

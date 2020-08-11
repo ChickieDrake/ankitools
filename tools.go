@@ -7,6 +7,8 @@ import (
 	"github.com/ChickieDrake/ankitools/types"
 )
 
+const ankiURI = "http://localhost:8765"
+
 // Tools provides the methods to interact with AnkiConnect.
 type Tools struct {
 	ac apiClient
@@ -16,7 +18,7 @@ type Tools struct {
 // New creates a new instance of Tools.
 func New() *Tools {
 	return &Tools{
-		ac: apiclient.New(),
+		ac: apiclient.New(ankiURI),
 		cv: convert.New(),
 	}
 }
@@ -28,7 +30,7 @@ func (t *Tools) DeckNames() ([]string, error) {
 		return nil, err
 	}
 
-	body, err := t.ac.DoAction(m)
+	body, err := t.ac.DoPost(m)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 		return nil, err
 	}
 
-	body, err := t.ac.DoAction(m)
+	body, err := t.ac.DoPost(m)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func (t *Tools) findNotesByID(ids []int) ([]*types.Note, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := t.ac.DoAction(m)
+	body, err := t.ac.DoPost(m)
 	if err != nil {
 		return nil, err
 	}
@@ -110,5 +112,6 @@ type converter interface {
 
 //go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg
 type apiClient interface {
-	DoAction(body string) (message string, err error)
+	DoPost(body string) (message string, err error)
+	//DoGet(url string) (*http.Response, error)
 }
