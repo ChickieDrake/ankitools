@@ -168,6 +168,44 @@ func TestTools_QueryNotes_SUCCESS(t *testing.T) {
 
 }
 
+func TestTools_QueryNotes_DUPLICATE_VALUES_SUCCESS(t *testing.T) {
+	// setup
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
+
+	// test the condition when the query returns duplicate not IDs (only get unique)
+	const dupQueryNotesResponse = `{"result": [1483959289817, 1483959289817],"error": null}`
+	var dupNotesInfoRequest = fmt.Sprintf(requestTemplateWithParams, convert.NotesInfoAction, `{"notes":[1483959289817]}`)
+	const dupNotesInfoResponse = `{
+		"result": [
+			{
+				"noteId":1483959289817
+			}
+		],
+		"error": null
+	}`
+
+	ac.On(doAction, queryNotesRequest).Return(dupQueryNotesResponse, nil).
+		On(doAction, dupNotesInfoRequest).Return(dupNotesInfoResponse, nil)
+
+	// execute
+	notes, err := tools.QueryNotes(notesQuery)
+
+	// verify
+	assert.Nil(t, err)
+	require.NotNil(t, notes)
+
+	var expectedNotes = []*types.Note{
+		{NoteID: 1483959289817},
+	}
+	assert.Equal(t, expectedNotes, notes)
+
+	// make sure that the correct requests were sent to the api client
+	ac.AssertExpectations(t)
+
+}
+
 func TestTools_QueryNotes_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 	// setup
 	tools, _, cv := toolsWithMocks()

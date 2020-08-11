@@ -62,7 +62,23 @@ func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 	if err != nil {
 		return nil, err
 	}
-	return t.cv.ToNoteIDList(body)
+	list, err := t.cv.ToNoteIDList(body)
+
+	// only want unique values
+	var u []int
+	for _, id := range list {
+		found := false
+		for _, uid := range u {
+			if id == uid {
+				found = true
+				break
+			}
+		}
+		if !found {
+			u = append(u, id)
+		}
+	}
+	return u, err
 }
 
 func (t *Tools) findNotesByID(ids []int) ([]*types.Note, error) {
