@@ -50,6 +50,12 @@ func (t *Tools) QueryNotes(query string) ([]*types.Note, error) {
 	return notes, err
 }
 
+//func (t *Tools) AddTag(ids []int, tag string) error {
+//}
+
+//func (t *Tools) UpdateNoteFields(note *types.Note) error {
+//}
+
 func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 	params := &convert.Params{Query: query}
 
