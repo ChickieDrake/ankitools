@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 		name string
 		want *Tools
 	}{
-		{"Happy path", &Tools{apiclient.New(ankiURI), convert.New()}},
+		{"Happy path", &Tools{apiclient.New(), convert.New()}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestTools_DeckNames_SUCCESS(t *testing.T) {
 	tools.ac = ac
 
 	//cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
-	ac.On(doAction, deckNamesRequest).Return(deckNamesResponse, nil).Once()
+	ac.On(doAction, ankiURI, deckNamesRequest).Return(deckNamesResponse, nil).Once()
 
 	// execute
 	names, err := tools.DeckNames()
@@ -121,7 +121,7 @@ func TestTools_DeckNames_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
 	tools, ac, cv := toolsWithMocks()
 
 	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
-	ac.On(doAction, deckNamesRequest).Return("", expectedErr).Once()
+	ac.On(doAction, ankiURI, deckNamesRequest).Return("", expectedErr).Once()
 
 	// execute
 	names, err := tools.DeckNames()
@@ -137,7 +137,7 @@ func TestTools_DeckNames_ERR_FROM_TODECKNAMELIST_FAIL(t *testing.T) {
 	tools, ac, cv := toolsWithMocks()
 
 	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
-	ac.On(doAction, deckNamesRequest).Return(deckNamesResponse, nil).Once()
+	ac.On(doAction, ankiURI, deckNamesRequest).Return(deckNamesResponse, nil).Once()
 	cv.On(toDeckList, deckNamesResponse).Return(nil, expectedErr).Once()
 
 	// execute
@@ -155,8 +155,8 @@ func TestTools_QueryNotes_SUCCESS(t *testing.T) {
 	ac := &MockApiClient{}
 	tools.ac = ac
 
-	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).
-		On(doAction, notesInfoRequest).Return(notesInfoResponse, nil)
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(queryNotesResponse, nil).
+		On(doAction, ankiURI, notesInfoRequest).Return(notesInfoResponse, nil)
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -186,8 +186,8 @@ func TestTools_QueryNotes_DUPLICATE_VALUES_SUCCESS(t *testing.T) {
 		"error": null
 	}`
 
-	ac.On(doAction, queryNotesRequest).Return(dupQueryNotesResponse, nil).
-		On(doAction, dupNotesInfoRequest).Return(dupNotesInfoResponse, nil)
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(dupQueryNotesResponse, nil).
+		On(doAction, ankiURI, dupNotesInfoRequest).Return(dupNotesInfoResponse, nil)
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -233,7 +233,7 @@ func TestTools_QueryNotes_ERR_FROM_DOACTION_FAIL(t *testing.T) {
 	ac := &MockApiClient{}
 	tools.ac = ac
 
-	ac.On(doAction, queryNotesRequest).Return("", expectedErr).Once()
+	ac.On(doAction, ankiURI, queryNotesRequest).Return("", expectedErr).Once()
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -249,7 +249,7 @@ func TestTools_QueryNotes_ERR_FROM_TONOTEIDLIST_FAIL(t *testing.T) {
 	tools, ac, cv := toolsWithMocks()
 
 	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
-	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(queryNotesResponse, nil).Once()
 	cv.On(toNoteIDList, queryNotesResponse).Return(nil, expectedErr).Once()
 
 	// execute
@@ -266,7 +266,7 @@ func TestTools_QueryNotes_ERR_FROM_SECOND_TOREQUESTMESSAGE_FAIL(t *testing.T) {
 
 	// All this is passing behaviour
 	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
-	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(queryNotesResponse, nil).Once()
 	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
 
 	// This is throwing the error we expect to see
@@ -286,12 +286,12 @@ func TestTools_QueryNotes_ERR_FROM_SECOND_DOACTION_FAIL(t *testing.T) {
 
 	// All this is passing behaviour
 	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
-	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(queryNotesResponse, nil).Once()
 	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
 	cv.On(toRequestMessage, convert.NotesInfoAction, notesInfoParams).Return(notesInfoRequest, nil).Once()
 
 	// This is throwing the error we expect to see
-	ac.On(doAction, notesInfoRequest).Return("", expectedErr).Once()
+	ac.On(doAction, ankiURI, notesInfoRequest).Return("", expectedErr).Once()
 
 	// execute
 	notes, err := tools.QueryNotes(notesQuery)
@@ -308,11 +308,11 @@ func TestTools_QueryNotes_ERR_FROM_TONOTELIST_FAIL(t *testing.T) {
 
 	// All this is passing behaviour
 	cv.On(toRequestMessage, convert.QueryNotesAction, notesQueryParams).Return(queryNotesRequest, nil).Once()
-	ac.On(doAction, queryNotesRequest).Return(queryNotesResponse, nil).Once()
+	ac.On(doAction, ankiURI, queryNotesRequest).Return(queryNotesResponse, nil).Once()
 	cv.On(toNoteIDList, queryNotesResponse).Return(expectedNoteIDs, nil).Once()
 
 	cv.On(toRequestMessage, convert.NotesInfoAction, notesInfoParams).Return(notesInfoRequest, nil).Once()
-	ac.On(doAction, notesInfoRequest).Return(notesInfoResponse, nil).Once()
+	ac.On(doAction, ankiURI, notesInfoRequest).Return(notesInfoResponse, nil).Once()
 
 	// This is throwing the error we expect to see
 	cv.On(toNoteList, notesInfoResponse).Return(nil, expectedErr).Once()

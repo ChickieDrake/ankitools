@@ -18,7 +18,27 @@ const mockErrorMessage = "mock: simple error for testing"
 const testURI = "http://eclipsebudo.com"
 const testMimeType = "application/json"
 
-func Test_callUriAndReturnBody_success(t *testing.T) {
+func TestApiClient_DoGet_SUCCESS(t *testing.T) {
+
+	// setup
+	a, mockHTTPClient := createClientWithMockedHttp()
+
+	mockResponse := createDefaultResponse()
+
+	// verification (wrong order because of mocking)
+	// check to make sure that the method calls the api with the correct request body
+	mockHTTPClient.On(
+		"Get",
+		testURI,
+	).Return(mockResponse, nil).Once()
+
+	// execution
+	_, _ = a.DoGet(testURI)
+
+	mockHTTPClient.AssertExpectations(t)
+}
+
+func TestApiClient_DoPost_SUCCESS(t *testing.T) {
 
 	// setup
 	a, mockHTTPClient := createClientWithMockedHttp()
@@ -35,13 +55,13 @@ func Test_callUriAndReturnBody_success(t *testing.T) {
 	).Return(mockResponse, nil).Once()
 
 	// execution
-	_, _ = a.DoPost(expectedAction)
+	_, _ = a.DoPost(testURI, expectedAction)
 
 	mockHTTPClient.AssertExpectations(t)
 
 }
 
-func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
+func TestApiClient_DoPost_ERROR_READING_BODY_FAIL(t *testing.T) {
 
 	// setup
 	a, mockHTTPClient := createClientWithMockedHttp()
@@ -60,7 +80,7 @@ func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
 
 	// execute
 	// execute
-	message, err := a.DoPost(expectedAction)
+	message, err := a.DoPost(testURI, expectedAction)
 
 	// assert
 	assert.Emptyf(t, message, "Expected message to be empty if ioutil.Readall returned an error, received: %s", message)
@@ -70,7 +90,7 @@ func Test_callUriAndReturnBody_error_reading_body(t *testing.T) {
 	mockHTTPClient.AssertExpectations(t)
 }
 
-func Test_callUriAndReturnBody_err(t *testing.T) {
+func TestApiClient_DoPost_ERR_FAIL(t *testing.T) {
 
 	// setup
 	a, mockHTTPClient := createClientWithMockedHttp()
@@ -87,7 +107,7 @@ func Test_callUriAndReturnBody_err(t *testing.T) {
 	).Return(mockResponse, mockErr).Once()
 
 	// execute
-	message, err := a.DoPost(expectedAction)
+	message, err := a.DoPost(testURI, expectedAction)
 
 	// assert
 	assert.Empty(t, message, "Expected message to be null if http client returned an error")
@@ -97,7 +117,7 @@ func Test_callUriAndReturnBody_err(t *testing.T) {
 	mockHTTPClient.AssertExpectations(t)
 }
 
-func Test_callUriAndReturnBody_not_200(t *testing.T) {
+func TestApiClient_DoPost_NOT_200_FAIL(t *testing.T) {
 	// setup
 	a, mockHTTPClient := createClientWithMockedHttp()
 	mockResponse := createDefaultResponse()
@@ -113,7 +133,7 @@ func Test_callUriAndReturnBody_not_200(t *testing.T) {
 	).Return(mockResponse, nil).Once()
 
 	// execute
-	message, err := a.DoPost(expectedAction)
+	message, err := a.DoPost(testURI, expectedAction)
 
 	// assert
 	assert.Empty(t, message, "Expected message to be empty if http client returned an error")
@@ -139,7 +159,7 @@ func (*errorBodyReader) ReadAll(io.Reader) ([]byte, error) {
 }
 
 func createClientWithMockedHttp() (*ApiClient, *MockHTTPClient) {
-	a := New(testURI)
+	a := New()
 	mockHTTPClient := &MockHTTPClient{}
 	a.httpClient = mockHTTPClient
 	return a, mockHTTPClient

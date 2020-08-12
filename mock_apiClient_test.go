@@ -9,20 +9,20 @@ type MockApiClient struct {
 	mock.Mock
 }
 
-// DoAction provides a mock function with given fields: body
-func (_m *MockApiClient) DoPost(body string) (string, error) {
-	ret := _m.Called(body)
+// DoPost provides a mock function with given fields: uri, body
+func (_m *MockApiClient) DoPost(uri string, body string) (string, error) {
+	ret := _m.Called(uri, body)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(string) string); ok {
-		r0 = rf(body)
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(uri, body)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(body)
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(uri, body)
 	} else {
 		r1 = ret.Error(1)
 	}

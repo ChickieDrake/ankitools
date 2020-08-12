@@ -18,7 +18,7 @@ type Tools struct {
 // New creates a new instance of Tools.
 func New() *Tools {
 	return &Tools{
-		ac: apiclient.New(ankiURI),
+		ac: apiclient.New(),
 		cv: convert.New(),
 	}
 }
@@ -30,7 +30,7 @@ func (t *Tools) DeckNames() ([]string, error) {
 		return nil, err
 	}
 
-	body, err := t.ac.DoPost(m)
+	body, err := t.ac.DoPost(ankiURI, m)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 		return nil, err
 	}
 
-	body, err := t.ac.DoPost(m)
+	body, err := t.ac.DoPost(ankiURI, m)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (t *Tools) findNotesByID(ids []int) ([]*types.Note, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := t.ac.DoPost(m)
+	body, err := t.ac.DoPost(ankiURI, m)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +112,6 @@ type converter interface {
 
 //go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg
 type apiClient interface {
-	DoPost(body string) (message string, err error)
+	DoPost(uri string, body string) (message string, err error)
 	//DoGet(url string) (*http.Response, error)
 }

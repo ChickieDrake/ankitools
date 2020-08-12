@@ -24,29 +24,33 @@ type ApiClient struct {
 }
 
 // New creates a pointer to a new instance of ApiClient.
-func New(uri string) *ApiClient {
+func New() *ApiClient {
 	return &ApiClient{
-		URI:        uri,
 		httpClient: new(http.Client),
 		bodyReader: new(defaultBodyReader),
 	}
 }
 
 // DoPost takes a well-formatted JSON message and sends it to AnkiConnect.
-func (a *ApiClient) DoPost(body string) (string, error) {
-	return a.DoHTTP(http.MethodPost, body)
+func (a *ApiClient) DoPost(uri string, body string) (string, error) {
+	return a.doHTTP(uri, http.MethodPost, body)
 }
 
-func (a *ApiClient) DoHTTP(method string, body string) (string, error) {
+// DoGet returns the response body of an HTTP GET request
+func (a *ApiClient) DoGet(uri string) (string, error) {
+	return a.doHTTP(uri, http.MethodGet, "")
+}
+
+func (a *ApiClient) doHTTP(uri string, method string, body string) (string, error) {
 	var message string
 	var resp *http.Response
 	var err error
 
 	if method == http.MethodPost {
 		mimeType := "application/json"
-		resp, err = a.httpClient.Post(a.URI, mimeType, bytes.NewBufferString(body))
+		resp, err = a.httpClient.Post(uri, mimeType, bytes.NewBufferString(body))
 	} else if method == http.MethodGet {
-		resp, err = a.httpClient.Get(a.URI)
+		resp, err = a.httpClient.Get(uri)
 	}
 	if err != nil {
 		return message, err
