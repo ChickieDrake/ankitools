@@ -1,3 +1,5 @@
+github.com/ChickieDrake/httpclient v0.0.0-20200812003912-7f153e4c7a95 h1:NRDD/+yH+Rnd5RwkmFRGADX4Xk6cDbdfkX+Z7DgH46I=
+github.com/ChickieDrake/httpclient v0.0.0-20200812003912-7f153e4c7a95/go.mod h1:/ihBvRSyglw+7ZnonjU9UfFdEy4tgMvw/W1r7DuW9hM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

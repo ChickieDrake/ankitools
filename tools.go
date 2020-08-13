@@ -2,9 +2,9 @@
 package ankitools
 
 import (
-	"github.com/ChickieDrake/ankitools/apiclient"
 	"github.com/ChickieDrake/ankitools/convert"
 	"github.com/ChickieDrake/ankitools/types"
+	"github.com/ChickieDrake/httpclient"
 )
 
 const ankiURI = "http://localhost:8765"
@@ -18,7 +18,7 @@ type Tools struct {
 // New creates a new instance of Tools.
 func New() *Tools {
 	return &Tools{
-		ac: apiclient.New(),
+		ac: httpclient.New(),
 		cv: convert.New(),
 	}
 }
@@ -113,5 +113,4 @@ type converter interface {
 //go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg
 type apiClient interface {
 	DoPost(uri string, body string) (message string, err error)
-	//DoGet(url string) (*http.Response, error)
 }
