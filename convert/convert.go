@@ -16,6 +16,8 @@ const (
 	DecksAction      Action = "deckNames"
 	QueryNotesAction Action = "findNotes"
 	NotesInfoAction  Action = "notesInfo"
+	AddTagAction     Action = "addTags"
+	UpdateNoteAction Action = "updateNoteFields"
 )
 
 // Converter provides methods that can be used to create and interpret messages for AnkiConnect
@@ -65,7 +67,7 @@ func (c *Converter) ToNoteIDList(message string) ([]int, error) {
 	return r.Result, err
 }
 
-func (c *Converter) ToNoteList(message string) ([]*types.Note, error) {
+func (c *Converter) ToNoteList(message string) ([]*types.NoteInfo, error) {
 	r := &notesResponse{}
 	err := c.unmarshal(message, r)
 	return r.Result, err

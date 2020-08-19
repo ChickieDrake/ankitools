@@ -1,6 +1,6 @@
 package types
 
-type Note struct {
+type NoteInfo struct {
 	NoteID    int
 	ModelName string
 	Tags      *[]string
@@ -11,4 +11,9 @@ type Note struct {
 type Field struct {
 	Value string
 	Order int
+}
+
+type NoteUpdate struct {
+	NoteID int                `json:"id"`
+	Fields *map[string]string `json:"fields"`
 }

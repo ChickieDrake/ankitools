@@ -8,6 +8,15 @@ import (
 )
 
 func TestConverter_ToRequestMessage(t *testing.T) {
+
+	var noteUpdate = &types.NoteUpdate{
+		NoteID: 1483959289817,
+		Fields: &map[string]string{
+			"Front": "new front content",
+			"Back":  "new back content",
+		},
+	}
+
 	type args struct {
 		action convert.Action
 		params *convert.Params
@@ -21,6 +30,12 @@ func TestConverter_ToRequestMessage(t *testing.T) {
 		{"Happy path", args{action: "fake"}, `{"action":"fake","version":6}`, false},
 		{"Contains unescaped character", args{action: `"`}, `{"action":"\"","version":6}`, false},
 		{"Contains params", args{action: `fake`, params: &convert.Params{Query: "deck:current"}}, `{"action":"fake","version":6,"params":{"query":"deck:current"}}`, false},
+		{
+			"All params",
+			args{action: `fake`, params: &convert.Params{Query: "deck:current", Notes: []int{1483959289817, 1483959291695}, Tag: "testing", Note: noteUpdate}},
+			`{"action":"fake","version":6,"params":{"query":"deck:current","notes":[1483959289817,1483959291695],"tags":"testing","note":{"id":1483959289817,"fields":{"Back":"new back content","Front":"new front content"}}}}`,
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -143,7 +158,7 @@ func TestConverter_ToNoteList(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []*types.Note
+		want    []*types.NoteInfo
 		wantErr bool
 	}{
 		{
@@ -163,7 +178,7 @@ func TestConverter_ToNoteList(t *testing.T) {
 					],
 					"error": null
 				}`},
-			want: []*types.Note{{
+			want: []*types.NoteInfo{{
 				NoteID:    1502298033753,
 				ModelName: "Basic",
 				Tags: &[]string{

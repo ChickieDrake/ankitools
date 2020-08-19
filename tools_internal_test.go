@@ -6,9 +6,9 @@ import (
 	"github.com/ChickieDrake/ankitools/apiclient"
 	"github.com/ChickieDrake/ankitools/convert"
 	"github.com/ChickieDrake/ankitools/types"
+	"github.com/ChickieDrake/httpclient"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"reflect"
 	"testing"
 )
 
@@ -24,9 +24,9 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
+			got := New()
+			require.IsType(t, &httpclient.ApiClient{}, got.ac)
+			require.IsType(t, &convert.Converter{}, got.cv)
 		})
 	}
 }
@@ -38,6 +38,8 @@ const requestTemplateWithParams = `{"action":"%s","version":6,"params":%s}`
 var deckNamesRequest = fmt.Sprintf(requestTemplate, convert.DecksAction)
 var queryNotesRequest = fmt.Sprintf(requestTemplateWithParams, convert.QueryNotesAction, `{"query":"deck:current"}`)
 var notesInfoRequest = fmt.Sprintf(requestTemplateWithParams, convert.NotesInfoAction, `{"notes":[1483959289817,1483959291695]}`)
+var addTagRequest = fmt.Sprintf(requestTemplateWithParams, convert.AddTagAction, fmt.Sprintf(`{"notes":[1483959289817,1483959291695],"tags":"%s"}`, expectedTag))
+var updateNoteRequest = fmt.Sprintf(requestTemplateWithParams, convert.UpdateNoteAction, `{"note":{"id":1483959289817,"fields":{"Back":"new back content","Front":"new front content"}}}`)
 
 // Valid HTTP responses (for mocking)
 const deckNamesResponse = `{"result": ["Deck1","Deck2"],"error": null}`
@@ -53,6 +55,8 @@ const notesInfoResponse = `{
 		],
 		"error": null
 	}`
+const addTagResponse = `{"result": null,"error": null}`
+const updateNoteResponse = `{"result": null,"error": null}`
 
 // Valid mock object method names
 const toRequestMessage = "ToRequestMessage"
@@ -68,9 +72,17 @@ var notesQueryParams = &convert.Params{Query: notesQuery}
 var notesInfoParams = &convert.Params{Notes: expectedNoteIDs}
 
 var expectedNoteIDs = []int{1483959289817, 1483959291695}
-var expectedNotes = []*types.Note{
+var expectedNotes = []*types.NoteInfo{
 	{NoteID: 1483959289817},
 	{NoteID: 1483959291695},
+}
+var expectedTag = "Test Tag"
+var noteUpdate = &types.NoteUpdate{
+	NoteID: 1483959289817,
+	Fields: &map[string]string{
+		"Front": "new front content",
+		"Back":  "new back content",
+	},
 }
 
 func TestTools_DeckNames_SUCCESS(t *testing.T) {
@@ -118,9 +130,10 @@ func TestTools_DeckNames_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
 func TestTools_DeckNames_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
 
 	// setup
-	tools, ac, cv := toolsWithMocks()
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
 
-	cv.On(toRequestMessage, convert.DecksAction, emptyParams).Return(deckNamesRequest, nil).Once()
 	ac.On(doAction, ankiURI, deckNamesRequest).Return("", expectedErr).Once()
 
 	// execute
@@ -196,7 +209,7 @@ func TestTools_QueryNotes_DUPLICATE_VALUES_SUCCESS(t *testing.T) {
 	assert.Nil(t, err)
 	require.NotNil(t, notes)
 
-	var expectedNotes = []*types.Note{
+	var expectedNotes = []*types.NoteInfo{
 		{NoteID: 1483959289817},
 	}
 	assert.Equal(t, expectedNotes, notes)
@@ -322,6 +335,100 @@ func TestTools_QueryNotes_ERR_FROM_TONOTELIST_FAIL(t *testing.T) {
 
 	// verify
 	assert.Nil(t, notes)
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_AddTag_SUCCESS(t *testing.T) {
+	// setup
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
+
+	ac.On(doAction, ankiURI, addTagRequest).Return(addTagResponse, nil)
+
+	// execute
+	err := tools.AddTag(expectedNoteIDs, expectedTag)
+
+	// verify
+	assert.Nil(t, err)
+
+	ac.AssertExpectations(t)
+}
+
+func TestTools_AddTag_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
+	// setup
+	tools, _, cv := toolsWithMocks()
+
+	cv.On(toRequestMessage, convert.AddTagAction, &convert.Params{Notes: expectedNoteIDs, Tag: expectedTag}).Return("", expectedErr).Once()
+	// execute
+	err := tools.AddTag(expectedNoteIDs, expectedTag)
+
+	// verify
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_AddTag_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
+
+	// setup
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
+
+	ac.On(doAction, ankiURI, addTagRequest).Return("", expectedErr).Once()
+
+	// execute
+	err := tools.AddTag(expectedNoteIDs, expectedTag)
+
+	// verify
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_UpdateNoteFields_SUCCESS(t *testing.T) {
+	// setup
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
+
+	ac.On(doAction, ankiURI, updateNoteRequest).Return(updateNoteResponse, nil)
+
+	// execute
+	err := tools.UpdateNoteFields(noteUpdate)
+
+	// verify
+	assert.Nil(t, err)
+
+	ac.AssertExpectations(t)
+}
+
+func TestTools_UpdateNoteFields_ERR_FROM_TO_REQUEST_MESSAGE_FAIL(t *testing.T) {
+	// setup
+	tools, _, cv := toolsWithMocks()
+
+	cv.On(toRequestMessage, convert.UpdateNoteAction, &convert.Params{Note: noteUpdate}).Return("", expectedErr).Once()
+	// execute
+	err := tools.UpdateNoteFields(noteUpdate)
+
+	// verify
+	require.NotNil(t, err)
+	assert.Equal(t, expectedErr, err)
+}
+
+func TestTools_UpdateNoteFields_ERR_FROM_TO_DOACTION_FAIL(t *testing.T) {
+
+	// setup
+	tools := New()
+	ac := &MockApiClient{}
+	tools.ac = ac
+
+	ac.On(doAction, ankiURI, updateNoteRequest).Return("", expectedErr).Once()
+
+	// execute
+	err := tools.UpdateNoteFields(noteUpdate)
+
+	// verify
 	require.NotNil(t, err)
 	assert.Equal(t, expectedErr, err)
 }

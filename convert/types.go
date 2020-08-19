@@ -11,8 +11,10 @@ Params represents the basic structure used by AnkiConnect for request parameters
 Not all params are used by requests, but this represents the param types that are supported.
 */
 type Params struct {
-	Query string `json:"query,omitempty"`
-	Notes []int  `json:"notes,omitempty"`
+	Query string            `json:"query,omitempty"`
+	Notes []int             `json:"notes,omitempty"`
+	Tag   string            `json:"tags,omitempty"`
+	Note  *types.NoteUpdate `json:"note,omitempty"`
 }
 
 type requestBody struct {
@@ -44,7 +46,7 @@ type noteIDsResponse struct {
 }
 
 type notesResponse struct {
-	Result []*types.Note
+	Result []*types.NoteInfo
 	errorResponse
 }
 

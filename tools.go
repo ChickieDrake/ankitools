@@ -39,24 +39,48 @@ func (t *Tools) DeckNames() ([]string, error) {
 }
 
 // QueryNotes finds the info for the notes that match the query string passed in.
-func (t *Tools) QueryNotes(query string) ([]*types.Note, error) {
+func (t *Tools) QueryNotes(query string) ([]*types.NoteInfo, error) {
 
 	noteIDs, err := t.findNoteIDsByQuery(query)
 	if err != nil {
 		return nil, err
 	}
 
-	var notes []*types.Note
+	var notes []*types.NoteInfo
 	notes, err = t.findNotesByID(noteIDs)
 
 	return notes, err
 }
 
-//func (t *Tools) AddTag(ids []int, tag string) error {
-//}
+func (t *Tools) AddTag(ids []int, tag string) error {
+	params := &convert.Params{Notes: ids, Tag: tag}
+	m, err := t.cv.ToRequestMessage(convert.AddTagAction, params)
+	if err != nil {
+		return err
+	}
 
-//func (t *Tools) UpdateNoteFields(note *types.Note) error {
-//}
+	_, err = t.ac.DoPost(ankiURI, m)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *Tools) UpdateNoteFields(note *types.NoteUpdate) error {
+	params := &convert.Params{Note: note}
+	m, err := t.cv.ToRequestMessage(convert.UpdateNoteAction, params)
+	if err != nil {
+		return err
+	}
+
+	_, err = t.ac.DoPost(ankiURI, m)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 	params := &convert.Params{Query: query}
@@ -89,7 +113,7 @@ func (t *Tools) findNoteIDsByQuery(query string) ([]int, error) {
 	return u, err
 }
 
-func (t *Tools) findNotesByID(ids []int) ([]*types.Note, error) {
+func (t *Tools) findNotesByID(ids []int) ([]*types.NoteInfo, error) {
 	params := &convert.Params{Notes: ids}
 	m, err := t.cv.ToRequestMessage(convert.NotesInfoAction, params)
 	if err != nil {
@@ -107,7 +131,7 @@ type converter interface {
 	ToRequestMessage(action convert.Action, params *convert.Params) (message string, err error)
 	ToDeckNameList(message string) (decks []string, err error)
 	ToNoteIDList(message string) (notes []int, err error)
-	ToNoteList(message string) ([]*types.Note, error)
+	ToNoteList(message string) ([]*types.NoteInfo, error)
 }
 
 //go:generate mockery -name apiClient -filename mock_apiClient_test.go -structname MockApiClient -output . -inpkg

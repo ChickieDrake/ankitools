@@ -8,3 +8,5 @@ require (
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.6.1
 )
+
+replace github.com/ChickieDrake/httpclient => ../httpclient

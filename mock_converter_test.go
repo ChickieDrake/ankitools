@@ -61,15 +61,15 @@ func (_m *MockConverter) ToNoteIDList(message string) ([]int, error) {
 }
 
 // ToNoteList provides a mock function with given fields: message
-func (_m *MockConverter) ToNoteList(message string) ([]*types.Note, error) {
+func (_m *MockConverter) ToNoteList(message string) ([]*types.NoteInfo, error) {
 	ret := _m.Called(message)
 
-	var r0 []*types.Note
-	if rf, ok := ret.Get(0).(func(string) []*types.Note); ok {
+	var r0 []*types.NoteInfo
+	if rf, ok := ret.Get(0).(func(string) []*types.NoteInfo); ok {
 		r0 = rf(message)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*types.Note)
+			r0 = ret.Get(0).([]*types.NoteInfo)
 		}
 	}
 
