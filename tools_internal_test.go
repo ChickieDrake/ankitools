@@ -3,7 +3,6 @@ package ankitools
 import (
 	"errors"
 	"fmt"
-	"github.com/ChickieDrake/ankitools/apiclient"
 	"github.com/ChickieDrake/ankitools/convert"
 	"github.com/ChickieDrake/ankitools/types"
 	"github.com/ChickieDrake/httpclient"
@@ -20,7 +19,7 @@ func TestNew(t *testing.T) {
 		name string
 		want *Tools
 	}{
-		{"Happy path", &Tools{apiclient.New(), convert.New()}},
+		{"Happy path", &Tools{httpclient.New(), convert.New()}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
